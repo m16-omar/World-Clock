@@ -39,18 +39,19 @@ class AlarmCard extends StatelessWidget {
       periodStr = alarm.hour >= 12 ? 'PM' : 'AM';
     }
 
-    final activeColor =
-        alarm.isEnabled ? AppColors.primaryBlue : const Color(0xFF64748B);
+    final activeColor = alarm.isEnabled
+        ? (context.isDark ? AppColors.cyanAccent : AppColors.primaryBlue)
+        : context.textMuted;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: alarm.isEnabled
               ? AppColors.primaryBlue.withValues(alpha: 0.3)
-              : AppColors.darkCardBorder,
+              : context.cardBorder,
           width: 1.2,
         ),
         boxShadow: alarm.isEnabled
@@ -61,7 +62,13 @@ class AlarmCard extends StatelessWidget {
                   offset: const Offset(0, 4),
                 ),
               ]
-            : null,
+            : [
+                BoxShadow(
+                  color: context.shadowColor,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -88,8 +95,8 @@ class AlarmCard extends StatelessWidget {
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: alarm.isEnabled
-                                  ? Colors.white
-                                  : const Color(0xFF64748B),
+                                  ? context.textPrimary
+                                  : context.textMuted,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -106,7 +113,7 @@ class AlarmCard extends StatelessWidget {
                                 '${alarm.cityName} ($offsetStr)',
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
-                                  color: const Color(0xFF94A3B8),
+                                  color: context.textSecondary,
                                 ),
                               ),
                             ],
@@ -118,8 +125,8 @@ class AlarmCard extends StatelessWidget {
                       value: alarm.isEnabled,
                       activeTrackColor: AppColors.primaryBlue,
                       activeThumbColor: Colors.white,
-                      inactiveTrackColor: AppColors.darkSurface,
-                      inactiveThumbColor: const Color(0xFF64748B),
+                      inactiveTrackColor: context.inputBg,
+                      inactiveThumbColor: context.textMuted,
                       onChanged: onToggle,
                     ),
                   ],
@@ -140,8 +147,8 @@ class AlarmCard extends StatelessWidget {
                         letterSpacing: -1.0,
                         height: 1.0,
                         color: alarm.isEnabled
-                            ? Colors.white
-                            : const Color(0xFF64748B),
+                            ? context.textPrimary
+                            : context.textMuted,
                       ),
                     ),
                     if (periodStr.isNotEmpty) ...[
@@ -170,12 +177,12 @@ class AlarmCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: alarm.isEnabled
                             ? AppColors.primaryBlue.withValues(alpha: 0.12)
-                            : const Color(0xFF334155).withValues(alpha: 0.2),
+                            : context.inputBg,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: alarm.isEnabled
                               ? AppColors.primaryBlue.withValues(alpha: 0.25)
-                              : AppColors.darkCardBorder,
+                              : context.cardBorder,
                         ),
                       ),
                       child: Text(
@@ -184,14 +191,16 @@ class AlarmCard extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: alarm.isEnabled
-                              ? AppColors.cyanAccent
-                              : const Color(0xFF64748B),
+                              ? (context.isDark
+                                  ? AppColors.cyanAccent
+                                  : AppColors.primaryBlue)
+                              : context.textMuted,
                         ),
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                      color: const Color(0xFF64748B),
+                      color: context.textMuted,
                       onPressed: onDelete,
                       tooltip: 'Delete Alarm',
                       constraints: const BoxConstraints(),

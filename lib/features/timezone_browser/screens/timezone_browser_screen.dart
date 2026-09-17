@@ -50,25 +50,28 @@ class _TimezoneBrowserScreenState extends ConsumerState<TimezoneBrowserScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.darkCard,
+                color: context.inputBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.darkCardBorder),
+                border: Border.all(color: context.cardBorder),
               ),
               child: TextField(
                 controller: _searchController,
-                style: GoogleFonts.inter(fontSize: 15),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: context.textPrimary,
+                ),
                 onChanged: (val) {
                   ref.read(searchQueryProvider.notifier).setQuery(val);
                 },
                 decoration: InputDecoration(
                   hintText: 'Search city, country, or timezone...',
                   hintStyle: GoogleFonts.inter(
-                    color: const Color(0xFF64748B),
+                    color: context.textMuted,
                     fontSize: 14,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: Color(0xFF94A3B8),
+                    color: context.textSecondary,
                   ),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
@@ -114,16 +117,16 @@ class _TimezoneBrowserScreenState extends ConsumerState<TimezoneBrowserScreen> {
                   labelStyle: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                    color: isSelected ? Colors.white : context.textSecondary,
                   ),
                   selectedColor: AppColors.primaryBlue,
-                  backgroundColor: AppColors.darkCard,
+                  backgroundColor: context.cardBg,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
                       color: isSelected
                           ? AppColors.primaryBlue
-                          : AppColors.darkCardBorder,
+                          : context.cardBorder,
                     ),
                   ),
                   showCheckmark: false,
@@ -137,7 +140,7 @@ class _TimezoneBrowserScreenState extends ConsumerState<TimezoneBrowserScreen> {
           // List of Timezones
           Expanded(
             child: filteredList.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(context)
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: filteredList.length,
@@ -171,15 +174,15 @@ class _TimezoneBrowserScreenState extends ConsumerState<TimezoneBrowserScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.travel_explore_rounded,
             size: 56,
-            color: Color(0xFF475569),
+            color: context.textMuted,
           ),
           const SizedBox(height: 16),
           Text(
@@ -187,7 +190,7 @@ class _TimezoneBrowserScreenState extends ConsumerState<TimezoneBrowserScreen> {
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF94A3B8),
+              color: context.textSecondary,
             ),
           ),
           const SizedBox(height: 6),
@@ -195,7 +198,7 @@ class _TimezoneBrowserScreenState extends ConsumerState<TimezoneBrowserScreen> {
             'Try searching for another city or country',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: const Color(0xFF64748B),
+              color: context.textMuted,
             ),
           ),
         ],
@@ -224,13 +227,20 @@ class _TimezoneListTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSaved
               ? AppColors.primaryBlue.withValues(alpha: 0.4)
-              : AppColors.darkCardBorder,
+              : context.cardBorder,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: context.shadowColor,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -243,13 +253,14 @@ class _TimezoneListTile extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 16,
             fontWeight: FontWeight.w600,
+            color: context.textPrimary,
           ),
         ),
         subtitle: Text(
           '${item.countryName} • $offsetStr',
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: const Color(0xFF94A3B8),
+            color: context.textSecondary,
           ),
         ),
         trailing: Row(
@@ -260,7 +271,7 @@ class _TimezoneListTile extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFCBD5E1),
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(width: 8),

@@ -27,9 +27,16 @@ class SettingsScreen extends ConsumerWidget {
           const _SectionHeader(title: 'TIME & DISPLAY'),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.darkCard,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.darkCardBorder),
+              border: Border.all(color: context.cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: context.shadowColor,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -39,6 +46,7 @@ class SettingsScreen extends ConsumerWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
                     ),
                   ),
                   subtitle: Text(
@@ -47,27 +55,28 @@ class SettingsScreen extends ConsumerWidget {
                         : 'Displaying 2:00 PM',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: const Color(0xFF94A3B8),
+                      color: context.textSecondary,
                     ),
                   ),
                   value: settings.is24HourFormat,
                   activeThumbColor: AppColors.primaryBlue,
                   onChanged: (_) => settingsNotifier.toggle24HourFormat(),
                 ),
-                const Divider(height: 1, color: AppColors.darkCardBorder),
+                Divider(height: 1, color: context.cardBorder),
                 SwitchListTile(
                   title: Text(
                     'Show Seconds',
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
                     ),
                   ),
                   subtitle: Text(
                     'Display real-time seconds on world clocks',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: const Color(0xFF94A3B8),
+                      color: context.textSecondary,
                     ),
                   ),
                   value: settings.showSeconds,
@@ -84,9 +93,16 @@ class SettingsScreen extends ConsumerWidget {
           const _SectionHeader(title: 'APPEARANCE'),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.darkCard,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.darkCardBorder),
+              border: Border.all(color: context.cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: context.shadowColor,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -97,7 +113,7 @@ class SettingsScreen extends ConsumerWidget {
                   isSelected: settings.themeMode == ThemeMode.dark,
                   onTap: () => settingsNotifier.setThemeMode(ThemeMode.dark),
                 ),
-                const Divider(height: 1, color: AppColors.darkCardBorder),
+                Divider(height: 1, color: context.cardBorder),
                 _ThemeSelectionTile(
                   title: 'Light Mode',
                   subtitle: 'Clean high-contrast daytime mode',
@@ -116,9 +132,16 @@ class SettingsScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.darkCard,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.darkCardBorder),
+              border: Border.all(color: context.cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: context.shadowColor,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,6 +169,7 @@ class SettingsScreen extends ConsumerWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
+                            color: context.textPrimary,
                           ),
                         ),
                         Text(
@@ -165,7 +189,7 @@ class SettingsScreen extends ConsumerWidget {
                   'Includes all $totalZones official IANA worldwide locations with historical and future Daylight Saving Time transition rules.',
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: const Color(0xFF94A3B8),
+                    color: context.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -182,8 +206,8 @@ class SettingsScreen extends ConsumerWidget {
                   icon: const Icon(Icons.restore_rounded, size: 16),
                   label: const Text('Reset Clocks to Default'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFCBD5E1),
-                    side: const BorderSide(color: AppColors.darkCardBorder),
+                    foregroundColor: context.textPrimary,
+                    side: BorderSide(color: context.cardBorder),
                   ),
                 ),
               ],
@@ -197,9 +221,16 @@ class SettingsScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.darkCard,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.darkCardBorder),
+              border: Border.all(color: context.cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: context.shadowColor,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -228,13 +259,14 @@ class SettingsScreen extends ConsumerWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
+                          color: context.textPrimary,
                         ),
                       ),
                       Text(
                         'Version 1.0.0 • Offline First',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: const Color(0xFF94A3B8),
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
@@ -278,7 +310,8 @@ class _ThemeSelectionTile extends StatelessWidget {
             Icon(
               icon,
               size: 22,
-              color: isSelected ? AppColors.primaryBlue : const Color(0xFF94A3B8),
+              color:
+                  isSelected ? AppColors.primaryBlue : context.textSecondary,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -290,13 +323,14 @@ class _ThemeSelectionTile extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: const Color(0xFF94A3B8),
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -330,7 +364,7 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.0,
-          color: const Color(0xFF64748B),
+          color: context.textSecondary,
         ),
       ),
     );

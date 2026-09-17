@@ -32,13 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.darkSurface,
-          border: const Border(
-            top: BorderSide(color: AppColors.darkCardBorder, width: 1),
+          color: context.surfaceBg,
+          border: Border(
+            top: BorderSide(color: context.cardBorder, width: 1),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: context.shadowColor,
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -99,7 +99,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeColor = AppColors.primaryBlue;
-    final inactiveColor = const Color(0xFF64748B);
+    final inactiveColor = context.textMuted;
 
     return InkWell(
       onTap: onTap,
@@ -109,7 +109,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? activeColor.withValues(alpha: 0.12)
+              ? activeColor.withValues(alpha: context.isDark ? 0.12 : 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),

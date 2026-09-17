@@ -48,15 +48,16 @@ class WorldClockCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: dayPeriod.accentColor.withValues(alpha: 0.2),
+          color: dayPeriod.accentColor
+              .withValues(alpha: context.isDark ? 0.2 : 0.4),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
+            color: context.shadowColor,
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -95,6 +96,7 @@ class WorldClockCard extends ConsumerWidget {
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: -0.3,
+                                    color: context.textPrimary,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -103,7 +105,7 @@ class WorldClockCard extends ConsumerWidget {
                                   item.countryName,
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
-                                    color: const Color(0xFF94A3B8),
+                                    color: context.textSecondary,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -122,19 +124,27 @@ class WorldClockCard extends ConsumerWidget {
                           horizontal: 9, vertical: 4),
                       decoration: BoxDecoration(
                         color: diffStr.startsWith('+')
-                            ? AppColors.emeraldGreen.withValues(alpha: 0.15)
+                            ? AppColors.emeraldGreen
+                                .withValues(alpha: context.isDark ? 0.15 : 0.12)
                             : (diffStr.startsWith('-')
-                                ? AppColors.roseDusk.withValues(alpha: 0.15)
-                                : const Color(0xFF64748B)
-                                    .withValues(alpha: 0.15)),
+                                ? AppColors.roseDusk.withValues(
+                                    alpha: context.isDark ? 0.15 : 0.12)
+                                : (context.isDark
+                                    ? const Color(0xFF64748B)
+                                        .withValues(alpha: 0.15)
+                                    : const Color(0xFFE2E8F0))),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: diffStr.startsWith('+')
-                              ? AppColors.emeraldGreen.withValues(alpha: 0.3)
+                              ? AppColors.emeraldGreen
+                                  .withValues(alpha: context.isDark ? 0.3 : 0.5)
                               : (diffStr.startsWith('-')
-                                  ? AppColors.roseDusk.withValues(alpha: 0.3)
-                                  : const Color(0xFF64748B)
-                                      .withValues(alpha: 0.3)),
+                                  ? AppColors.roseDusk.withValues(
+                                      alpha: context.isDark ? 0.3 : 0.5)
+                                  : (context.isDark
+                                      ? const Color(0xFF64748B)
+                                          .withValues(alpha: 0.3)
+                                      : const Color(0xFFCBD5E1))),
                         ),
                       ),
                       child: Text(
@@ -146,7 +156,7 @@ class WorldClockCard extends ConsumerWidget {
                               ? AppColors.emeraldGreen
                               : (diffStr.startsWith('-')
                                   ? AppColors.roseDusk
-                                  : const Color(0xFF94A3B8)),
+                                  : context.textMuted),
                         ),
                       ),
                     ),
@@ -155,7 +165,7 @@ class WorldClockCard extends ConsumerWidget {
                       const SizedBox(width: 4),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, size: 18),
-                        color: const Color(0xFF64748B),
+                        color: context.textMuted,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: onDelete,
@@ -184,6 +194,7 @@ class WorldClockCard extends ConsumerWidget {
                             fontWeight: FontWeight.w700,
                             letterSpacing: -1.0,
                             height: 1.0,
+                            color: context.textPrimary,
                           ),
                         ),
                         if (periodString.isNotEmpty) ...[
@@ -232,7 +243,7 @@ class WorldClockCard extends ConsumerWidget {
                       dateString,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: const Color(0xFFCBD5E1),
+                        color: context.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -243,7 +254,7 @@ class WorldClockCard extends ConsumerWidget {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF64748B),
+                            color: context.textMuted,
                           ),
                         ),
                         if (isDst) ...[
@@ -252,7 +263,8 @@ class WorldClockCard extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.amberSun.withValues(alpha: 0.15),
+                              color: AppColors.amberSun.withValues(
+                                  alpha: context.isDark ? 0.15 : 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(

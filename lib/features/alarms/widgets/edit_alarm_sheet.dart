@@ -65,18 +65,6 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: _selectedHour, minute: _selectedMinute),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primaryBlue,
-              surface: AppColors.darkCard,
-              onSurface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null) {
       setState(() {
@@ -90,7 +78,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.darkSurface,
+      backgroundColor: context.surfaceBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -108,7 +96,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF475569),
+                    color: context.textMuted.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -119,6 +107,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),
@@ -129,13 +118,14 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
                     ),
                   ),
                   subtitle: Text(
                     'Triggers at local time',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: const Color(0xFF94A3B8),
+                      color: context.textSecondary,
                     ),
                   ),
                   onTap: () {
@@ -147,7 +137,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                     Navigator.of(ctx).pop();
                   },
                 ),
-                const Divider(color: AppColors.darkCardBorder),
+                Divider(color: context.cardBorder),
                 Expanded(
                   child: ListView.builder(
                     controller: controller,
@@ -167,13 +157,14 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
                           ),
                         ),
                         subtitle: Text(
                           '${city.countryName} • $offset',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: const Color(0xFF94A3B8),
+                            color: context.textSecondary,
                           ),
                         ),
                         onTap: () {
@@ -223,9 +214,9 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
         left: 20,
         right: 20,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: context.surfaceBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -238,7 +229,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF475569),
+                  color: context.textMuted.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -254,10 +245,12 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                   style: GoogleFonts.outfit(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
+                    color: context.textPrimary,
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),
+                  color: context.textSecondary,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -274,12 +267,19 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.darkCard,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
                       color: AppColors.primaryBlue.withValues(alpha: 0.35),
                       width: 1.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: context.shadowColor,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -293,6 +293,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                           fontWeight: FontWeight.w700,
                           letterSpacing: -1.5,
                           height: 1.0,
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -301,14 +302,16 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                         style: GoogleFonts.outfit(
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.cyanAccent,
+                          color: context.isDark
+                              ? AppColors.cyanAccent
+                              : AppColors.primaryBlue,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(
+                      Icon(
                         Icons.edit_rounded,
                         size: 20,
-                        color: Color(0xFF94A3B8),
+                        color: context.textSecondary,
                       ),
                     ],
                   ),
@@ -325,28 +328,31 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: const Color(0xFF64748B),
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.darkCard,
+                color: context.inputBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.darkCardBorder),
+                border: Border.all(color: context.cardBorder),
               ),
               child: TextField(
                 controller: _titleController,
-                style: GoogleFonts.inter(fontSize: 15),
-                decoration: const InputDecoration(
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: context.textPrimary,
+                ),
+                decoration: InputDecoration(
                   hintText: 'e.g. London Team Sync, Wake up',
-                  hintStyle: TextStyle(color: Color(0xFF64748B)),
+                  hintStyle: TextStyle(color: context.textMuted),
                   border: InputBorder.none,
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   prefixIcon: Icon(
                     Icons.label_outline_rounded,
-                    color: Color(0xFF94A3B8),
+                    color: context.textSecondary,
                     size: 20,
                   ),
                 ),
@@ -362,7 +368,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: const Color(0xFF64748B),
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -373,9 +379,9 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: AppColors.darkCard,
+                  color: context.inputBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.darkCardBorder),
+                  border: Border.all(color: context.cardBorder),
                 ),
                 child: Row(
                   children: [
@@ -388,12 +394,13 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
                         ),
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.chevron_right_rounded,
-                      color: Color(0xFF94A3B8),
+                      color: context.textSecondary,
                     ),
                   ],
                 ),
@@ -409,7 +416,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
-                color: const Color(0xFF64748B),
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 10),
@@ -431,11 +438,11 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                       shape: BoxShape.circle,
                       color: isSelected
                           ? AppColors.primaryBlue
-                          : AppColors.darkCard,
+                          : context.inputBg,
                       border: Border.all(
                         color: isSelected
                             ? AppColors.primaryBlue
-                            : AppColors.darkCardBorder,
+                            : context.cardBorder,
                       ),
                     ),
                     child: Center(
@@ -446,7 +453,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                           fontWeight: FontWeight.w700,
                           color: isSelected
                               ? Colors.white
-                              : const Color(0xFF94A3B8),
+                              : context.textSecondary,
                         ),
                       ),
                     ),
@@ -487,9 +494,9 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
             // Vibrate Switch
             Container(
               decoration: BoxDecoration(
-                color: AppColors.darkCard,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.darkCardBorder),
+                border: Border.all(color: context.cardBorder),
               ),
               child: SwitchListTile(
                 title: Text(
@@ -497,11 +504,14 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                   style: GoogleFonts.outfit(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
                   ),
                 ),
                 value: _vibrate,
                 activeTrackColor: AppColors.primaryBlue,
                 activeThumbColor: Colors.white,
+                inactiveTrackColor: context.inputBg,
+                inactiveThumbColor: context.textMuted,
                 onChanged: (val) => setState(() => _vibrate = val),
               ),
             ),
@@ -576,10 +586,10 @@ class _PresetChip extends StatelessWidget {
       label: Text(label),
       labelStyle: GoogleFonts.inter(
         fontSize: 12,
-        color: const Color(0xFFCBD5E1),
+        color: context.textSecondary,
       ),
-      backgroundColor: AppColors.darkCard,
-      side: const BorderSide(color: AppColors.darkCardBorder),
+      backgroundColor: context.cardBg,
+      side: BorderSide(color: context.cardBorder),
       onPressed: onTap,
     );
   }

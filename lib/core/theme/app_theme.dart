@@ -8,8 +8,8 @@ class AppColors {
   static const Color darkCard = Color(0xFF182032);
   static const Color darkCardBorder = Color(0xFF26334D);
 
-  // Light palette
-  static const Color lightBg = Color(0xFFF4F6FB);
+  // Light palette (Clean, modern, crisp)
+  static const Color lightBg = Color(0xFFF1F5F9);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFFFFFFF);
   static const Color lightCardBorder = Color(0xFFE2E8F0);
@@ -46,21 +46,30 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+}
 
-  // Glassmorphism card gradient
-  static const LinearGradient glassCardGradientDark = LinearGradient(
-    colors: [
-      Color(0x2A3B82F6),
-      Color(0x101E293B),
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+extension ThemeContext on BuildContext {
+  bool get isDark => Theme.of(this).brightness == Brightness.dark;
+  Color get cardBg => isDark ? AppColors.darkCard : AppColors.lightCard;
+  Color get cardBorder =>
+      isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder;
+  Color get surfaceBg =>
+      isDark ? AppColors.darkSurface : AppColors.lightSurface;
+  Color get inputBg => isDark ? AppColors.darkSurface : const Color(0xFFF8FAFC);
+  Color get textPrimary => isDark ? Colors.white : const Color(0xFF0F172A);
+  Color get textSecondary =>
+      isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+  Color get textMuted =>
+      isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+  Color get shadowColor => isDark
+      ? Colors.black.withValues(alpha: 0.3)
+      : const Color(0x0C000000);
 }
 
 class AppTheme {
   static ThemeData get darkTheme {
-    final baseTextTheme = GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme);
+    final baseTextTheme =
+        GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme);
 
     return ThemeData(
       useMaterial3: true,
@@ -132,7 +141,8 @@ class AppTheme {
   }
 
   static ThemeData get lightTheme {
-    final baseTextTheme = GoogleFonts.outfitTextTheme(ThemeData.light().textTheme);
+    final baseTextTheme =
+        GoogleFonts.outfitTextTheme(ThemeData.light().textTheme);
 
     return ThemeData(
       useMaterial3: true,

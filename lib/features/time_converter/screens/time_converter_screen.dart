@@ -46,18 +46,6 @@ class TimeConverterScreen extends ConsumerWidget {
                   initialDate: state.selectedDateTime,
                   firstDate: DateTime(2000),
                   lastDate: DateTime(2050),
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: ColorScheme.dark(
-                          primary: AppColors.primaryBlue,
-                          surface: AppColors.darkCard,
-                          onSurface: Colors.white,
-                        ),
-                      ),
-                      child: child!,
-                    );
-                  },
                 );
                 if (pickedDate != null) {
                   notifier.setDate(pickedDate);
@@ -67,18 +55,6 @@ class TimeConverterScreen extends ConsumerWidget {
                 final pickedTime = await showTimePicker(
                   context: context,
                   initialTime: TimeOfDay.fromDateTime(state.selectedDateTime),
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: ColorScheme.dark(
-                          primary: AppColors.primaryBlue,
-                          surface: AppColors.darkCard,
-                          onSurface: Colors.white,
-                        ),
-                      ),
-                      child: child!,
-                    );
-                  },
                 );
                 if (pickedTime != null) {
                   notifier.setTime(pickedTime);
@@ -159,22 +135,29 @@ class TimeConverterScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.darkCardBorder),
+        border: Border.all(color: context.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: context.shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.compare_arrows_rounded,
-                size: 44, color: Color(0xFF475569)),
+            Icon(Icons.compare_arrows_rounded,
+                size: 44, color: context.textMuted),
             const SizedBox(height: 12),
             Text(
               'No target timezones added',
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF94A3B8),
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -201,7 +184,7 @@ class TimeConverterScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.darkSurface,
+      backgroundColor: context.surfaceBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -219,7 +202,7 @@ class TimeConverterScreen extends ConsumerWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF475569),
+                    color: context.textMuted.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -230,6 +213,7 @@ class TimeConverterScreen extends ConsumerWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),
@@ -253,13 +237,14 @@ class TimeConverterScreen extends ConsumerWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
                           ),
                         ),
                         subtitle: Text(
                           '${item.countryName} • ${TimezoneService.getFormattedOffset(item.ianaId)}',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: const Color(0xFF94A3B8),
+                            color: context.textSecondary,
                           ),
                         ),
                         trailing: isBase
@@ -331,7 +316,7 @@ class _BaseZoneCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: AppColors.primaryBlue.withValues(alpha: 0.35),
@@ -397,9 +382,9 @@ class _BaseZoneCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.darkSurface,
+                color: context.inputBg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.darkCardBorder),
+                border: Border.all(color: context.cardBorder),
               ),
               child: Row(
                 children: [
@@ -417,21 +402,22 @@ class _BaseZoneCard extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
+                            color: context.textPrimary,
                           ),
                         ),
                         Text(
                           '${state.baseZone.countryName} ($offsetStr${isDst ? ' • DST' : ''})',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: const Color(0xFF94A3B8),
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.unfold_more_rounded,
-                    color: Color(0xFF94A3B8),
+                    color: context.textSecondary,
                   ),
                 ],
               ),
@@ -452,9 +438,9 @@ class _BaseZoneCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.darkSurface,
+                      color: context.inputBg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.darkCardBorder),
+                      border: Border.all(color: context.cardBorder),
                     ),
                     child: Row(
                       children: [
@@ -470,6 +456,7 @@ class _BaseZoneCard extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -492,16 +479,16 @@ class _BaseZoneCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.darkSurface,
+                      color: context.inputBg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.darkCardBorder),
+                      border: Border.all(color: context.cardBorder),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.access_time_rounded,
                           size: 18,
-                          color: AppColors.cyanAccent,
+                          color: context.isDark ? AppColors.cyanAccent : AppColors.primaryBlue,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -510,6 +497,7 @@ class _BaseZoneCard extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -531,7 +519,7 @@ class _BaseZoneCard extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.darkSurface,
+      backgroundColor: context.surfaceBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -549,7 +537,7 @@ class _BaseZoneCard extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF475569),
+                    color: context.textMuted.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -560,6 +548,7 @@ class _BaseZoneCard extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),
@@ -581,13 +570,14 @@ class _BaseZoneCard extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
                           ),
                         ),
                         subtitle: Text(
                           '${item.countryName} • ${TimezoneService.getFormattedOffset(item.ianaId)}',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: const Color(0xFF94A3B8),
+                            color: context.textSecondary,
                           ),
                         ),
                         trailing: isSelected
@@ -625,9 +615,16 @@ class _HourScrubber extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.darkCardBorder),
+        border: Border.all(color: context.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: context.shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,7 +637,7 @@ class _HourScrubber extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF94A3B8),
+                  color: context.textSecondary,
                 ),
               ),
               Text(
@@ -648,7 +645,7 @@ class _HourScrubber extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.cyanAccent,
+                  color: context.isDark ? AppColors.cyanAccent : AppColors.primaryBlue,
                 ),
               ),
             ],
@@ -656,10 +653,10 @@ class _HourScrubber extends StatelessWidget {
           SliderTheme(
             data: SliderThemeData(
               trackHeight: 6,
-              activeTrackColor: AppColors.cyanAccent,
-              inactiveTrackColor: AppColors.darkSurface,
-              thumbColor: Colors.white,
-              overlayColor: AppColors.cyanAccent.withValues(alpha: 0.2),
+              activeTrackColor: AppColors.primaryBlue,
+              inactiveTrackColor: context.inputBg,
+              thumbColor: AppColors.primaryBlue,
+              overlayColor: AppColors.primaryBlue.withValues(alpha: 0.2),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
             ),
             child: Slider(
@@ -717,11 +714,18 @@ class _ConvertedCityCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: dayPeriod.accentColor.withValues(alpha: 0.2),
+          color: context.cardBorder,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: context.shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -743,13 +747,14 @@ class _ConvertedCityCard extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
+                        color: context.textPrimary,
                       ),
                     ),
                     Text(
                       '${target.countryName} • $offsetStr',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: const Color(0xFF94A3B8),
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
@@ -832,6 +837,7 @@ class _ConvertedCityCard extends StatelessWidget {
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.5,
+                  color: context.textPrimary,
                 ),
               ),
               Row(
@@ -865,7 +871,7 @@ class _ConvertedCityCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFFCBD5E1),
+                  color: context.textSecondary,
                 ),
               ),
               Row(

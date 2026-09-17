@@ -35,25 +35,27 @@ class LocalTimeHeroCard extends ConsumerWidget {
         : DateFormat('a').format(currentTime).toUpperCase();
     final dateString = DateFormat('EEEE, MMMM d, y').format(currentTime);
 
+    final isDark = context.isDark;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: LinearGradient(
           colors: [
-            dayPeriod.accentColor.withValues(alpha: 0.22),
-            AppColors.darkSurface,
+            dayPeriod.accentColor.withValues(alpha: isDark ? 0.22 : 0.25),
+            isDark ? AppColors.darkSurface : Colors.white,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: dayPeriod.accentColor.withValues(alpha: 0.35),
+          color: dayPeriod.accentColor.withValues(alpha: isDark ? 0.35 : 0.45),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: dayPeriod.accentColor.withValues(alpha: 0.15),
+            color: dayPeriod.accentColor.withValues(alpha: isDark ? 0.15 : 0.12),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -92,6 +94,7 @@ class LocalTimeHeroCard extends ConsumerWidget {
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.3,
+                            color: context.textPrimary,
                           ),
                         ),
                         Text(
@@ -99,7 +102,7 @@ class LocalTimeHeroCard extends ConsumerWidget {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF94A3B8),
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
@@ -153,6 +156,7 @@ class LocalTimeHeroCard extends ConsumerWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: -1.5,
                     height: 1.0,
+                    color: context.textPrimary,
                   ),
                 ),
                 if (periodString.isNotEmpty) ...[
@@ -177,7 +181,7 @@ class LocalTimeHeroCard extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFCBD5E1),
+                color: context.textSecondary,
               ),
             ),
 
@@ -229,10 +233,10 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: context.isDark ? 0.12 : 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withValues(alpha: 0.3),
+          color: color.withValues(alpha: context.isDark ? 0.3 : 0.4),
         ),
       ),
       child: Row(

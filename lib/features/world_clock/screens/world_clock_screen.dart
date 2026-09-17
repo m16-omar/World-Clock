@@ -186,9 +186,16 @@ class WorldClockScreen extends ConsumerWidget {
       margin: const EdgeInsets.all(24),
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.darkCard,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.darkCardBorder),
+        border: Border.all(color: context.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: context.shadowColor,
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Center(
         child: Column(
@@ -204,6 +211,7 @@ class WorldClockScreen extends ConsumerWidget {
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
@@ -212,7 +220,7 @@ class WorldClockScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: const Color(0xFF94A3B8),
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 18),
@@ -237,6 +245,10 @@ class WorldClockScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 OutlinedButton(
                   onPressed: () => favoritesNotifier.resetToDefaults(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.textPrimary,
+                    side: BorderSide(color: context.cardBorder),
+                  ),
                   child: const Text('Restore Defaults'),
                 ),
               ],

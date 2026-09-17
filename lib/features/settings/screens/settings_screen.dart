@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/timezone/timezone_database.dart';
+import '../../../core/widgets/theme_toggle_switch.dart';
 import '../../world_clock/providers/world_clock_provider.dart';
 import '../providers/settings_provider.dart';
 
@@ -104,24 +105,60 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            child: Column(
-              children: [
-                _ThemeSelectionTile(
-                  title: 'Dark Mode (OLED Luxury)',
-                  subtitle: 'Deep navy background with glowing accents',
-                  icon: Icons.dark_mode_rounded,
-                  isSelected: settings.themeMode == ThemeMode.dark,
-                  onTap: () => settingsNotifier.setThemeMode(ThemeMode.dark),
-                ),
-                Divider(height: 1, color: context.cardBorder),
-                _ThemeSelectionTile(
-                  title: 'Light Mode',
-                  subtitle: 'Clean high-contrast daytime mode',
-                  icon: Icons.light_mode_rounded,
-                  isSelected: settings.themeMode == ThemeMode.light,
-                  onTap: () => settingsNotifier.setThemeMode(ThemeMode.light),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      settings.themeMode == ThemeMode.dark
+                          ? Icons.dark_mode_rounded
+                          : Icons.light_mode_rounded,
+                      size: 22,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dark Mode',
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          settings.themeMode == ThemeMode.dark
+                              ? 'OLED Luxury dark theme'
+                              : 'Clean daytime light theme',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ThemeToggleSwitch(
+                    isDark: settings.themeMode == ThemeMode.dark,
+                    onChanged: (isDark) {
+                      settingsNotifier.setThemeMode(
+                        isDark ? ThemeMode.dark : ThemeMode.light,
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -278,72 +315,6 @@ class SettingsScreen extends ConsumerWidget {
 
           const SizedBox(height: 40),
         ],
-      ),
-    );
-  }
-}
-
-class _ThemeSelectionTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ThemeSelectionTile({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color:
-                  isSelected ? AppColors.primaryBlue : context.textSecondary,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: context.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: AppColors.primaryBlue,
-                size: 22,
-              ),
-          ],
-        ),
       ),
     );
   }

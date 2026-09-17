@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/theme_toggle_switch.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../timezone_browser/screens/timezone_browser_screen.dart';
 import '../providers/world_clock_provider.dart';
@@ -50,6 +51,19 @@ class WorldClockScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          // Light / Dark Mode Pill Toggle
+          ThemeToggleSwitch(
+            width: 48,
+            height: 28,
+            isDark: settings.themeMode == ThemeMode.dark,
+            onChanged: (isDark) {
+              settingsNotifier.setThemeMode(
+                isDark ? ThemeMode.dark : ThemeMode.light,
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+
           // 12H / 24H Toggle
           ActionChip(
             label: Text(settings.is24HourFormat ? '24H' : '12H'),
@@ -64,7 +78,7 @@ class WorldClockScreen extends ConsumerWidget {
             ),
             onPressed: () => settingsNotifier.toggle24HourFormat(),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.add_rounded, size: 26),
             tooltip: 'Add Location',
@@ -76,7 +90,7 @@ class WorldClockScreen extends ConsumerWidget {
               );
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
         ],
       ),
       body: CustomScrollView(

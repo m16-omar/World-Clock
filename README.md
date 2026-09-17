@@ -7,6 +7,14 @@ A premium, offline-first Flutter application featuring real-time world clocks, o
 ![Riverpod](https://img.shields.io/badge/Riverpod-3.x-blueviolet)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/offline--first-100%25-success)
+[![Download APK](https://img.shields.io/badge/Download-Release%20APK%20(v1.0.0)-brightgreen?style=for-the-badge&logo=android)](release/world-time-v1.0.0.apk)
+
+---
+
+## 📲 Quick Download
+
+Download the latest production release APK directly to your Android phone or emulator:
+- **[Download world-time-v1.0.0.apk (53 MB)](release/world-time-v1.0.0.apk)**
 
 ---
 

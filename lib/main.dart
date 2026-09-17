@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/notifications/notification_service.dart';
 import 'core/storage/storage_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/timezone/timezone_database.dart';
@@ -25,6 +26,9 @@ void main() async {
 
   // Initialize offline local storage
   final storageService = await StorageService.init();
+
+  // Initialize notifications and alarm service
+  await NotificationService.instance.initialize();
 
   runApp(
     ProviderScope(

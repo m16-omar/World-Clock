@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/default_cities.dart';
 import '../timezone/timezone_model.dart';
+import '../../features/alarms/models/alarm_model.dart';
 
 class StorageService {
   static const String _keyFavorites = 'saved_world_clocks';
@@ -58,4 +59,25 @@ class StorageService {
   String? get converterBaseZone => _prefs.getString(_keyConverterBase);
   Future<bool> setConverterBaseZone(String ianaId) =>
       _prefs.setString(_keyConverterBase, ianaId);
+
+  // Alarms
+  static const String _keyAlarms = 'saved_world_alarms';
+
+  List<AlarmModel> getAlarms() {
+    final raw = _prefs.getStringList(_keyAlarms);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      return raw.map((item) {
+        final decoded = jsonDecode(item) as Map<String, dynamic>;
+        return AlarmModel.fromJson(decoded);
+      }).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<bool> saveAlarms(List<AlarmModel> alarms) {
+    final encoded = alarms.map((item) => jsonEncode(item.toJson())).toList();
+    return _prefs.setStringList(_keyAlarms, encoded);
+  }
 }

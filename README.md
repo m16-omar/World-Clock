@@ -31,6 +31,13 @@ A premium, offline-first Flutter application featuring real-time world clocks, o
 - **Multi-Zone Comparison**: Compare multiple world cities side-by-side.
 - **One-Tap Copy**: Quick copy formatted time and date to clipboard.
 
+### ⏰ World Alarms & Local Reminders
+- **Location-Aware Alarms**: Set alarms for local time or sync with any international city (e.g. 9:00 AM Tokyo or London time).
+- **Exact Scheduling**: Powered by `flutter_local_notifications` with exact time alarms while device is idle.
+- **Repeat Options**: Customizable repeat schedules (Every day, Weekdays, Weekends, specific days, or one-off).
+- **Upcoming Alarm Countdown**: Dynamic dashboard indicator displaying hours and minutes remaining until next alarm.
+- **Notification Test**: Instant trigger button to verify alarm sound and push banner on device.
+
 ### 🗺️ Timezone Browser
 - **Global Search**: Search by city, country, or IANA timezone identifier.
 - **Continent Filters**: Quick-filter chips for Africa, America, Europe, Asia, and Oceania.
@@ -50,6 +57,8 @@ lib/
 ├── core/
 │   ├── constants/
 │   │   └── default_cities.dart          # Curated favorites & world cities catalog
+│   ├── notifications/
+│   │   └── notification_service.dart    # Exact alarm & notification scheduling
 │   ├── storage/
 │   │   └── storage_service.dart         # SharedPreferences offline persistence
 │   ├── theme/
@@ -59,6 +68,16 @@ lib/
 │       ├── timezone_model.dart          # TimezoneItem data model
 │       └── timezone_service.dart        # Conversion, DST, offsets, TimeDayPeriod logic
 ├── features/
+│   ├── alarms/
+│   │   ├── models/
+│   │   │   └── alarm_model.dart         # Alarm data model & repeat logic
+│   │   ├── providers/
+│   │   │   └── alarm_provider.dart      # Riverpod 3 Notifier for alarms
+│   │   ├── screens/
+│   │   │   └── alarms_screen.dart       # World alarms screen & countdown banner
+│   │   └── widgets/
+│   │       ├── alarm_card.dart          # Alarm card with switch & timezone badge
+│   │       └── edit_alarm_sheet.dart    # Time picker, repeat days & location sheet
 │   ├── home/
 │   │   └── home_screen.dart             # Root IndexedStack bottom navigation
 │   ├── settings/

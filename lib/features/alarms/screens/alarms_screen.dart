@@ -9,11 +9,55 @@ import '../providers/alarm_provider.dart';
 import '../widgets/alarm_card.dart';
 import '../widgets/edit_alarm_sheet.dart';
 
-class AlarmsScreen extends ConsumerWidget {
+class AlarmsScreen extends ConsumerStatefulWidget {
   const AlarmsScreen({super.key});
 
-  void _openEditSheet(BuildContext context, WidgetRef ref, [AlarmModel? alarm]) {
+  @override
+  ConsumerState<AlarmsScreen> createState() => _AlarmsScreenState();
+}
+
+class _AlarmsScreenState extends ConsumerState<AlarmsScreen> {
+  bool _hasPermission = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    final granted = await NotificationService.instance.hasPermission();
+    if (mounted) {
+      setState(() {
+        _hasPermission = granted;
+      });
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    final granted = await NotificationService.instance.requestPermissions();
+    if (mounted) {
+      setState(() {
+        _hasPermission = granted;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            granted
+                ? 'Notification & alarm permissions granted!'
+                : 'Please enable notifications in device settings.',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _openEditSheet(BuildContext context, [AlarmModel? alarm]) {
     final notifier = ref.read(alarmProvider.notifier);
+
+    // Request permissions proactively if needed
+    NotificationService.instance.requestPermissions();
 
     showModalBottomSheet(
       context: context,
@@ -33,7 +77,7 @@ class AlarmsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final alarms = ref.watch(alarmProvider);
     final notifier = ref.read(alarmProvider.notifier);
     final nextAlarmInfo = ref.watch(nextUpcomingAlarmProvider);
@@ -74,13 +118,14 @@ class AlarmsScreen extends ConsumerWidget {
           // Test sound/notification button
           IconButton(
             icon: const Icon(Icons.notifications_active_outlined),
-            tooltip: 'Test Notification',
+            tooltip: 'Test Notification & Sound',
             onPressed: () async {
               await NotificationService.instance.showTestNotification();
+              _checkPermissions();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Test notification sent!'),
+                    content: Text('Test alarm notification triggered!'),
                     duration: Duration(seconds: 2),
                   ),
                 );
@@ -90,7 +135,7 @@ class AlarmsScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add_rounded, size: 26),
             tooltip: 'Add Alarm',
-            onPressed: () => _openEditSheet(context, ref),
+            onPressed: () => _openEditSheet(context),
           ),
           const SizedBox(width: 8),
         ],
@@ -100,6 +145,71 @@ class AlarmsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Permission Alert Banner if permissions are missing
+            if (!_hasPermission) ...[
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.amber,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Permissions Required',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            'Enable notification permissions so alarms can ring and pop on screen.',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _requestPermissions,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Allow',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // Upcoming Alarm Banner
             if (nextAlarmInfo != null) ...[
               Container(
@@ -140,21 +250,21 @@ class AlarmsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'UPCOMING ALARM',
+                            'Upcoming Alarm',
                             style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.0,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.purpleAccent,
+                              letterSpacing: 0.5,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             nextAlarmInfo,
                             style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: context.textPrimary,
                             ),
                           ),
                         ],
@@ -163,73 +273,112 @@ class AlarmsScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
 
-            // Section Header
+            // Header Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Scheduled Alarms (${alarms.length})',
+                  'Your Alarms (${alarms.length})',
                   style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
                   ),
                 ),
-                if (alarms.isNotEmpty)
-                  Text(
-                    '${alarms.where((a) => a.isEnabled).length} active',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
-                    ),
+                TextButton.icon(
+                  onPressed: () => _openEditSheet(context),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add Alarm'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.cyanAccent,
+                    visualDensity: VisualDensity.compact,
                   ),
+                ),
               ],
             ),
-
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
             // Alarms List or Empty State
             if (alarms.isEmpty)
-              _buildEmptyState(context, ref)
+              _buildEmptyState(context)
             else
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: alarms.length,
-                itemBuilder: (context, index) {
+                itemBuilder: (ctx, index) {
                   final alarm = alarms[index];
-                  return AlarmCard(
-                    alarm: alarm,
-                    is24Hour: settings.is24HourFormat,
-                    onToggle: (_) => notifier.toggleAlarm(alarm.id),
-                    onDelete: () {
-                      notifier.deleteAlarm(alarm.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Deleted "${alarm.title}"'),
-                          action: SnackBarAction(
-                            label: 'Undo',
-                            onPressed: () => notifier.addAlarm(alarm),
+                  return Dismissible(
+                    key: ValueKey('alarm_${alarm.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                    confirmDismiss: (direction) async {
+                      return await showDialog<bool>(
+                        context: context,
+                        builder: (dCtx) => AlertDialog(
+                          backgroundColor: context.surfaceBg,
+                          title: Text(
+                            'Delete Alarm',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w700,
+                              color: context.textPrimary,
+                            ),
                           ),
-                          duration: const Duration(seconds: 3),
+                          content: Text(
+                            'Are you sure you want to delete this alarm?',
+                            style: GoogleFonts.inter(
+                              color: context.textSecondary,
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(dCtx).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(dCtx).pop(true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.redAccent,
+                              ),
+                              child: const Text('Delete'),
+                            ),
+                          ],
                         ),
                       );
                     },
-                    onTap: () => _openEditSheet(context, ref, alarm),
+                    onDismissed: (_) => notifier.deleteAlarm(alarm.id),
+                    child: AlarmCard(
+                      alarm: alarm,
+                      is24Hour: settings.is24HourFormat,
+                      onToggle: (enabled) => notifier.toggleAlarm(alarm.id),
+                      onDelete: () => notifier.deleteAlarm(alarm.id),
+                      onTap: () => _openEditSheet(context, alarm),
+                    ),
                   );
                 },
               ),
-
             const SizedBox(height: 80),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEditSheet(context, ref),
+        onPressed: () => _openEditSheet(context),
         backgroundColor: AppColors.primaryBlue,
         icon: const Icon(Icons.add_alarm_rounded, color: Colors.white),
         label: Text(
@@ -243,7 +392,7 @@ class AlarmsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+  Widget _buildEmptyState(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 20),
       padding: const EdgeInsets.all(32),
@@ -287,7 +436,7 @@ class AlarmsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: () => _openEditSheet(context, ref),
+              onPressed: () => _openEditSheet(context),
               icon: const Icon(Icons.add_alarm_rounded, size: 18),
               label: const Text('Set Your First Alarm'),
               style: ElevatedButton.styleFrom(

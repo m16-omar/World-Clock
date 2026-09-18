@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/default_cities.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/timezone/timezone_database.dart';
 import '../../../core/timezone/timezone_service.dart';
 import '../models/alarm_model.dart';
 
@@ -47,7 +48,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
       _titleController = TextEditingController(text: 'Wake up / Reminder');
       _selectedHour = (now.hour + 1) % 24;
       _selectedMinute = 0;
-      _selectedIanaId = 'UTC';
+      _selectedIanaId = TimezoneDatabase.localIanaId;
       _selectedCityName = 'Local Device Time';
       _selectedFlagEmoji = '📍';
       _repeatDays = [];
@@ -130,7 +131,7 @@ class _EditAlarmSheetState extends State<EditAlarmSheet> {
                   ),
                   onTap: () {
                     setState(() {
-                      _selectedIanaId = 'UTC';
+                      _selectedIanaId = TimezoneDatabase.localIanaId;
                       _selectedCityName = 'Local Device Time';
                       _selectedFlagEmoji = '📍';
                     });

@@ -29,6 +29,7 @@ void main() async {
 
   // Initialize notifications and alarm service
   await NotificationService.instance.initialize();
+  await NotificationService.instance.requestPermissions();
 
   runApp(
     ProviderScope(

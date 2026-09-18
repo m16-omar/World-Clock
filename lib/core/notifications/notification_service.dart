@@ -13,11 +13,19 @@ class NotificationService {
 
   bool _isInitialized = false;
 
+  static const String alarmChannelId = 'world_time_alarm_channel_v2';
+  static const String alarmChannelName = 'World Time Alarms';
+  static const String alarmChannelDesc =
+      'Loud alarm notifications that ring and pop on screen';
+
+  static final Int64List _vibrationPattern =
+      Int64List.fromList([0, 1000, 500, 1000, 500, 1000]);
+
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -35,24 +43,55 @@ class NotificationService {
       await _plugin.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse: (details) {
-          debugPrint('Notification tapped: ${details.payload}');
+          debugPrint('Alarm notification tapped: ${details.payload}');
         },
       );
+
+      // Create high-priority alarm notification channel on Android (API 26+)
+      final androidImplementation = _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation != null) {
+        final channel = AndroidNotificationChannel(
+          alarmChannelId,
+          alarmChannelName,
+          description: alarmChannelDesc,
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+          vibrationPattern: _vibrationPattern,
+          enableLights: true,
+          showBadge: true,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
+        );
+        await androidImplementation.createNotificationChannel(channel);
+      }
+
       _isInitialized = true;
     } catch (e) {
-      debugPrint('Error initializing notifications: $e');
+      debugPrint('Error initializing notification service: $e');
     }
   }
 
+  /// Requests all necessary permissions for alarms:
+  /// - POST_NOTIFICATIONS on Android 13+ and iOS
+  /// - SCHEDULE_EXACT_ALARM on Android 12+
   Future<bool> requestPermissions() async {
     try {
       final androidImplementation = _plugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
       if (androidImplementation != null) {
-        final granted =
+        final grantedNotification =
             await androidImplementation.requestNotificationsPermission();
-        return granted ?? false;
+
+        final canExact =
+            await androidImplementation.canScheduleExactNotifications();
+        if (canExact != true) {
+          await androidImplementation.requestExactAlarmsPermission();
+        }
+
+        return grantedNotification ?? false;
       }
 
       final iosImplementation = _plugin
@@ -72,6 +111,20 @@ class NotificationService {
     return true;
   }
 
+  /// Checks if notification permissions are granted
+  Future<bool> hasPermission() async {
+    try {
+      final androidImplementation = _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation != null) {
+        final enabled = await androidImplementation.areNotificationsEnabled();
+        return enabled ?? true;
+      }
+    } catch (_) {}
+    return true;
+  }
+
   Future<void> scheduleAlarm(AlarmModel alarm) async {
     if (!alarm.isEnabled) {
       await cancelAlarm(alarm.id);
@@ -79,7 +132,18 @@ class NotificationService {
     }
 
     try {
-      final loc = TimezoneDatabase.getLocation(alarm.ianaId) ?? tz.local;
+      // Ensure permissions are in place
+      await requestPermissions();
+
+      // Resolve timezone location accurately
+      tz.Location loc;
+      if (alarm.cityName.contains('Local') || alarm.ianaId == 'UTC') {
+        loc = TimezoneDatabase.getLocation(TimezoneDatabase.localIanaId) ??
+            tz.local;
+      } else {
+        loc = TimezoneDatabase.getLocation(alarm.ianaId) ?? tz.local;
+      }
+
       final nowInZone = tz.TZDateTime.now(loc);
 
       var scheduledDate = tz.TZDateTime(
@@ -91,18 +155,35 @@ class NotificationService {
         alarm.minute,
       );
 
-      if (scheduledDate.isBefore(nowInZone)) {
-        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      if (alarm.repeatDays.isEmpty) {
+        // One-off alarm: if scheduled time today already passed, move to tomorrow
+        if (scheduledDate.isBefore(nowInZone) ||
+            scheduledDate.isAtSameMomentAs(nowInZone)) {
+          scheduledDate = scheduledDate.add(const Duration(days: 1));
+        }
+      } else {
+        // Repeat alarm: advance until finding the next active day that is in the future
+        while (!alarm.repeatDays.contains(scheduledDate.weekday) ||
+            scheduledDate.isBefore(nowInZone) ||
+            scheduledDate.isAtSameMomentAs(nowInZone)) {
+          scheduledDate = scheduledDate.add(const Duration(days: 1));
+        }
       }
 
-      const androidDetails = AndroidNotificationDetails(
-        'world_time_alarms',
-        'World Time Alarms',
-        channelDescription: 'Scheduled timezone and local alarms',
+      final androidDetails = AndroidNotificationDetails(
+        alarmChannelId,
+        alarmChannelName,
+        channelDescription: alarmChannelDesc,
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
+        category: AndroidNotificationCategory.alarm,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
         fullScreenIntent: true,
         playSound: true,
+        enableVibration: alarm.vibrate,
+        vibrationPattern: alarm.vibrate ? _vibrationPattern : null,
+        visibility: NotificationVisibility.public,
+        ticker: 'Alarm: ${alarm.title.isEmpty ? "Alarm" : alarm.title}',
       );
 
       const darwinDetails = DarwinNotificationDetails(
@@ -112,40 +193,58 @@ class NotificationService {
         interruptionLevel: InterruptionLevel.timeSensitive,
       );
 
-      const notificationDetails = NotificationDetails(
+      final notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: darwinDetails,
         macOS: darwinDetails,
       );
 
-      final subtitle = alarm.cityName != 'Local Time'
-          ? '${alarm.cityName} time (${alarm.hour.toString().padLeft(2, '0')}:${alarm.minute.toString().padLeft(2, '0')})'
-          : 'Alarm ringing!';
+      final title = alarm.title.isEmpty ? 'Alarm' : alarm.title;
+      final timeStr =
+          '${alarm.hour.toString().padLeft(2, '0')}:${alarm.minute.toString().padLeft(2, '0')}';
+      final subtitle = alarm.cityName != 'Local Device Time' &&
+              alarm.cityName != 'Local Time'
+          ? '${alarm.cityName} ($timeStr) — Alarm ringing!'
+          : 'Alarm ringing ($timeStr)';
+
+      // Determine Android exact scheduling capability safely
+      var scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+      final androidImplementation = _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation != null) {
+        final canExact =
+            await androidImplementation.canScheduleExactNotifications();
+        if (canExact != true) {
+          scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+        }
+      }
 
       if (alarm.repeatDays.isNotEmpty) {
-        // Repeat on scheduled days
         await _plugin.zonedSchedule(
           id: alarm.id,
-          title: alarm.title.isEmpty ? 'Alarm' : alarm.title,
+          title: title,
           body: subtitle,
           scheduledDate: scheduledDate,
           notificationDetails: notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.time,
+          androidScheduleMode: scheduleMode,
+          matchDateTimeComponents: alarm.repeatDays.length == 7
+              ? DateTimeComponents.time
+              : DateTimeComponents.dayOfWeekAndTime,
           payload: 'alarm_${alarm.id}',
         );
       } else {
-        // One-time alarm
         await _plugin.zonedSchedule(
           id: alarm.id,
-          title: alarm.title.isEmpty ? 'Alarm' : alarm.title,
+          title: title,
           body: subtitle,
           scheduledDate: scheduledDate,
           notificationDetails: notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          androidScheduleMode: scheduleMode,
           payload: 'alarm_${alarm.id}',
         );
       }
+      debugPrint('Scheduled alarm ${alarm.id} at $scheduledDate in ${loc.name}');
     } catch (e) {
       debugPrint('Error scheduling alarm ${alarm.id}: $e');
     }
@@ -167,15 +266,34 @@ class NotificationService {
     }
   }
 
+  /// Triggers an immediate test alarm notification so user can verify sound, vibration and pop-up
   Future<void> showTestNotification() async {
-    const androidDetails = AndroidNotificationDetails(
-      'world_time_test',
-      'Test Notifications',
-      importance: Importance.high,
-      priority: Priority.high,
+    await requestPermissions();
+
+    final androidDetails = AndroidNotificationDetails(
+      alarmChannelId,
+      alarmChannelName,
+      channelDescription: alarmChannelDesc,
+      importance: Importance.max,
+      priority: Priority.max,
+      category: AndroidNotificationCategory.alarm,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      fullScreenIntent: true,
+      playSound: true,
+      enableVibration: true,
+      vibrationPattern: _vibrationPattern,
+      visibility: NotificationVisibility.public,
+      ticker: 'Alarm Test',
     );
-    const darwinDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(
+
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+    );
+
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
@@ -183,9 +301,10 @@ class NotificationService {
 
     await _plugin.show(
       id: 99999,
-      title: 'World Time Alarm Test',
-      body: 'Your alarm notification system is active and working perfectly!',
+      title: '⏰ World Time Alarm Test',
+      body: 'Your alarm sound and heads-up banner are working perfectly!',
       notificationDetails: details,
+      payload: 'alarm_test',
     );
   }
 }

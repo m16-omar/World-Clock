@@ -17,7 +17,16 @@ class TimezoneDatabase {
         tz.setLocalLocation(loc);
         _localIanaId = localTz;
       } catch (e) {
-        debugPrint('Could not detect device timezone: $e');
+        debugPrint('Could not detect device timezone directly: $e');
+        final offset = DateTime.now().timeZoneOffset;
+        for (final entry in tz.timeZoneDatabase.locations.entries) {
+          final testDate = tz.TZDateTime.now(entry.value);
+          if (testDate.timeZoneOffset == offset) {
+            tz.setLocalLocation(entry.value);
+            _localIanaId = entry.key;
+            break;
+          }
+        }
       }
       _isInitialized = true;
     }

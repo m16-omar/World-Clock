@@ -13,13 +13,16 @@ class NotificationService {
 
   bool _isInitialized = false;
 
-  static const String alarmChannelId = 'world_time_alarm_channel_v2';
+  static const String alarmChannelId = 'world_time_alarm_v3';
   static const String alarmChannelName = 'World Time Alarms';
   static const String alarmChannelDesc =
-      'Loud alarm notifications that ring and pop on screen';
+      'High priority alarm notifications that ring and pop on screen';
 
   static final Int64List _vibrationPattern =
       Int64List.fromList([0, 1000, 500, 1000, 500, 1000]);
+
+  // FLAG_INSISTENT repeats the alarm sound continuously until dismissed by user
+  static final Int32List _alarmFlags = Int32List.fromList([4]);
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -43,23 +46,23 @@ class NotificationService {
       await _plugin.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse: (details) {
-          debugPrint('Alarm notification tapped: ${details.payload}');
+          debugPrint('Alarm notification dismissed or tapped: ${details.payload}');
         },
       );
 
-      // Create high-priority alarm notification channel on Android (API 26+)
+      // Create high-priority alarm notification channel with custom sound on Android (API 26+)
       final androidImplementation = _plugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
       if (androidImplementation != null) {
-        final channel = AndroidNotificationChannel(
+        const channel = AndroidNotificationChannel(
           alarmChannelId,
           alarmChannelName,
           description: alarmChannelDesc,
           importance: Importance.max,
           playSound: true,
+          sound: RawResourceAndroidNotificationSound('alarm_ringtone'),
           enableVibration: true,
-          vibrationPattern: _vibrationPattern,
           enableLights: true,
           showBadge: true,
           audioAttributesUsage: AudioAttributesUsage.alarm,
@@ -125,28 +128,43 @@ class NotificationService {
     return true;
   }
 
-  Future<void> scheduleAlarm(AlarmModel alarm) async {
-    if (!alarm.isEnabled) {
-      await cancelAlarm(alarm.id);
-      return;
-    }
+  /// Calculates the exact next trigger DateTime in device local time
+  static DateTime calculateNextTrigger(AlarmModel alarm) {
+    final now = DateTime.now();
 
-    try {
-      // Ensure permissions are in place
-      await requestPermissions();
+    if (alarm.cityName.contains('Local') ||
+        alarm.cityName.contains('Device') ||
+        alarm.ianaId == 'UTC' ||
+        alarm.ianaId.isEmpty) {
+      // Local Device Time Alarm: Use phone's native local hardware clock
+      var target = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        alarm.hour,
+        alarm.minute,
+      );
 
-      // Resolve timezone location accurately
-      tz.Location loc;
-      if (alarm.cityName.contains('Local') || alarm.ianaId == 'UTC') {
-        loc = TimezoneDatabase.getLocation(TimezoneDatabase.localIanaId) ??
-            tz.local;
+      if (alarm.repeatDays.isEmpty) {
+        // One-time alarm: if time has already passed today, advance to tomorrow
+        if (target.isBefore(now) || target.isAtSameMomentAs(now)) {
+          target = target.add(const Duration(days: 1));
+        }
       } else {
-        loc = TimezoneDatabase.getLocation(alarm.ianaId) ?? tz.local;
+        // Repeat alarm: advance to the next matching weekday that is in the future
+        while (!alarm.repeatDays.contains(target.weekday) ||
+            target.isBefore(now) ||
+            target.isAtSameMomentAs(now)) {
+          target = target.add(const Duration(days: 1));
+        }
       }
-
+      return target;
+    } else {
+      // Timezone-specific alarm (e.g., 9:00 AM Tokyo or London time)
+      final loc = TimezoneDatabase.getLocation(alarm.ianaId) ?? tz.local;
       final nowInZone = tz.TZDateTime.now(loc);
 
-      var scheduledDate = tz.TZDateTime(
+      var targetZone = tz.TZDateTime(
         loc,
         nowInZone.year,
         nowInZone.month,
@@ -156,19 +174,33 @@ class NotificationService {
       );
 
       if (alarm.repeatDays.isEmpty) {
-        // One-off alarm: if scheduled time today already passed, move to tomorrow
-        if (scheduledDate.isBefore(nowInZone) ||
-            scheduledDate.isAtSameMomentAs(nowInZone)) {
-          scheduledDate = scheduledDate.add(const Duration(days: 1));
+        if (targetZone.isBefore(nowInZone) ||
+            targetZone.isAtSameMomentAs(nowInZone)) {
+          targetZone = targetZone.add(const Duration(days: 1));
         }
       } else {
-        // Repeat alarm: advance until finding the next active day that is in the future
-        while (!alarm.repeatDays.contains(scheduledDate.weekday) ||
-            scheduledDate.isBefore(nowInZone) ||
-            scheduledDate.isAtSameMomentAs(nowInZone)) {
-          scheduledDate = scheduledDate.add(const Duration(days: 1));
+        while (!alarm.repeatDays.contains(targetZone.weekday) ||
+            targetZone.isBefore(nowInZone) ||
+            targetZone.isAtSameMomentAs(nowInZone)) {
+          targetZone = targetZone.add(const Duration(days: 1));
         }
       }
+
+      return targetZone.toLocal();
+    }
+  }
+
+  Future<void> scheduleAlarm(AlarmModel alarm) async {
+    if (!alarm.isEnabled) {
+      await cancelAlarm(alarm.id);
+      return;
+    }
+
+    try {
+      await requestPermissions();
+
+      final targetLocal = calculateNextTrigger(alarm);
+      final scheduledDate = tz.TZDateTime.from(targetLocal, tz.local);
 
       final androidDetails = AndroidNotificationDetails(
         alarmChannelId,
@@ -178,6 +210,8 @@ class NotificationService {
         priority: Priority.max,
         category: AndroidNotificationCategory.alarm,
         audioAttributesUsage: AudioAttributesUsage.alarm,
+        sound: const RawResourceAndroidNotificationSound('alarm_ringtone'),
+        additionalFlags: _alarmFlags, // Looping ringtone until dismissed
         fullScreenIntent: true,
         playSound: true,
         enableVibration: alarm.vibrate,
@@ -207,8 +241,8 @@ class NotificationService {
           ? '${alarm.cityName} ($timeStr) — Alarm ringing!'
           : 'Alarm ringing ($timeStr)';
 
-      // Determine Android exact scheduling capability safely
-      var scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+      // Determine Android exact scheduling mode: prefer alarmClock for hardware priority
+      var scheduleMode = AndroidScheduleMode.alarmClock;
       final androidImplementation = _plugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
@@ -244,7 +278,7 @@ class NotificationService {
           payload: 'alarm_${alarm.id}',
         );
       }
-      debugPrint('Scheduled alarm ${alarm.id} at $scheduledDate in ${loc.name}');
+      debugPrint('Scheduled alarm ${alarm.id} at $scheduledDate (${targetLocal.toIso8601String()}) with alarmClock mode');
     } catch (e) {
       debugPrint('Error scheduling alarm ${alarm.id}: $e');
     }
@@ -266,7 +300,7 @@ class NotificationService {
     }
   }
 
-  /// Triggers an immediate test alarm notification so user can verify sound, vibration and pop-up
+  /// Triggers an immediate test alarm notification with sound and persistent ring
   Future<void> showTestNotification() async {
     await requestPermissions();
 
@@ -278,6 +312,8 @@ class NotificationService {
       priority: Priority.max,
       category: AndroidNotificationCategory.alarm,
       audioAttributesUsage: AudioAttributesUsage.alarm,
+      sound: const RawResourceAndroidNotificationSound('alarm_ringtone'),
+      additionalFlags: _alarmFlags,
       fullScreenIntent: true,
       playSound: true,
       enableVibration: true,
@@ -302,7 +338,7 @@ class NotificationService {
     await _plugin.show(
       id: 99999,
       title: '⏰ World Time Alarm Test',
-      body: 'Your alarm sound and heads-up banner are working perfectly!',
+      body: 'Alarm sound and pop-up banner are ringing! Tap to dismiss.',
       notificationDetails: details,
       payload: 'alarm_test',
     );

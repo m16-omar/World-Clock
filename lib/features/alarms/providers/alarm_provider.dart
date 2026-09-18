@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:timezone/timezone.dart' as tz;
 import '../../../core/notifications/notification_service.dart';
-import '../../../core/timezone/timezone_database.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../models/alarm_model.dart';
 
@@ -75,35 +73,19 @@ final nextUpcomingAlarmProvider = Provider<String?>((ref) {
   DateTime? earliestTrigger;
   AlarmModel? nextAlarm;
 
-  final nowUtc = DateTime.now().toUtc();
+  final now = DateTime.now();
 
   for (final alarm in alarms) {
-    final loc = TimezoneDatabase.getLocation(alarm.ianaId) ?? tz.local;
-    final nowInZone = tz.TZDateTime.now(loc);
-
-    var scheduled = tz.TZDateTime(
-      loc,
-      nowInZone.year,
-      nowInZone.month,
-      nowInZone.day,
-      alarm.hour,
-      alarm.minute,
-    );
-
-    if (scheduled.isBefore(nowInZone)) {
-      scheduled = scheduled.add(const Duration(days: 1));
-    }
-
-    final triggerUtc = scheduled.toUtc();
-    if (earliestTrigger == null || triggerUtc.isBefore(earliestTrigger)) {
-      earliestTrigger = triggerUtc;
+    final trigger = NotificationService.calculateNextTrigger(alarm);
+    if (earliestTrigger == null || trigger.isBefore(earliestTrigger)) {
+      earliestTrigger = trigger;
       nextAlarm = alarm;
     }
   }
 
   if (earliestTrigger == null || nextAlarm == null) return null;
 
-  final diff = earliestTrigger.difference(nowUtc);
+  final diff = earliestTrigger.difference(now);
   if (diff.isNegative) return null;
 
   final hours = diff.inHours;
